@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario Interactivo: Factores de Localización y Longvie</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --error: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-number {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            padding: 14px 18px;
+            text-align: left;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: var(--success);
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error);
+            color: #7f1d1d;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            float: right;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .results-container {
+            text-align: center;
+            display: none;
+        }
+
+        .results-container h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--text);
+        }
+
+        .restart-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+
+        .restart-btn:hover {
+            background-color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Repaso Parcial: Geografía Económica</h1>
+        <p class="subtitle">Factores de Localización, Estrategia de Longvie y Teoría de José A. Borello</p>
+    </header>
+
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div id="quiz-container">
+        <!-- Las preguntas se cargarán dinámicamente aquí mediante JavaScript -->
+    </div>
+
+    <div class="results-container" id="results-container">
+        <h2>¡Cuestionario Completado! 🎉</h2>
+        <p>Has finalizado el repaso general para tu examen parcial.</p>
+        <div class="score-display" id="score-display">0/15</div>
+        <p id="feedback-message" style="font-size: 1.1rem; margin-bottom: 20px;"></p>
+        <button class="restart-btn" onclick="restartQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            numb: 1,
+            question: "Según José A. Borello, ¿cómo debe concebirse la espacialidad y la relocalización de una empresa como Longvie?",
+            options: [
+                "Como una decisión estática basada en un cálculo matemático inmediato.",
+                "Como un proceso dinámico y temporal en el tiempo (T1, T2, T3), condicionado por su historia (path-dependency).",
+                "Como un fenómeno aleatorio sin relación con el territorio.",
+                "Como un traslado exclusivo provocado por la crisis cambiaria."
+            ],
+            answer: 1,
+            explanation: "Borello critica la visión estática y explica que las firmas evolucionan históricamente estando atadas a su trayectoria previa (path-dependency)."
+        },
+        {
+            numb: 2,
+            question: "¿Qué diferencia teórica establece Borello entre 'sitio' y 'localización'?",
+            options: [
+                "Son exactamente lo mismo en la geografía económica.",
+                "El sitio es la macroescala regional y la localización es la parcela individual.",
+                "El sitio es la microescala (la parcela, los galpones, el layout) y la localización es la escala regional/nacional relativa a mercados.",
+                "El sitio solo se aplica al sector agropecuario y la localización al industrial."
+            ],
+            answer: 2,
+            explanation: "El sitio involucra la parcela y características micro, mientras que la localización refiere a la posición macro frente a mercados y proveedores."
+        },
+        {
+            numb: 3,
+            question: "¿Cómo operaba históricamente la fabricación de productos en Longvie frente al nuevo esquema actual?",
+            options: [
+                "Históricamente cada planta hacía un solo producto exclusivo y ahora hacen todo de todo.",
+                "Históricamente las plantas hacían múltiples productos sin especialización estricta, y ahora se reestructuró mediante una especialización funcional por planta.",
+                "Históricamente no fabricaban en el país y ahora importan todo.",
+                "No hubo cambios en la producción a lo largo del tiempo."
+            ],
+            answer: 1,
+            explanation: "Antes se replicaban procesos y se hacían varios productos en una misma planta; ahora rige una estricta reasignación funcional (Catamarca=calefones/anafes, Paraná=termotanques, Villa Martelli=cocinas)."
+        },
+        {
+            numb: 4,
+            question: "¿Qué explica el 'Factor 1: Valor de la tierra' en la estrategia de Longvie?",
+            options: [
+                "La empresa busca suelos rurales para plantar cereales.",
+                "El escape del alto costo inmobiliario de los suelos urbanos centrales hacia parques industriales periféricos con menor costo por m².",
+                "El valor de la tierra no influye en las industrias de línea blanca.",
+                "La compra exclusiva de tierras fiscales en la Patagonia."
+            ],
+            answer: 1,
+            explanation: "Las industrias consumen espacio intensivamente y buscan huir de la saturación y altos costos inmobiliarios urbanos centrales."
+        },
+        {
+            numb: 5,
+            question: "En relación al 'Factor 2: Composición material del producto', ¿por qué Longvie pudo separar sus líneas de producción?",
+            options: [
+                "Porque los electrodomésticos se componen de piezas y subconjuntos metalúrgicos divisibles y seriados.",
+                "Porque los artefactos son líquidos y fluyen por tuberías.",
+                "Porque las materias primas se pudren rápidamente.",
+                "Porque el producto final no requiere ensamblaje."
+            ],
+            answer: 0,
+            explanation: "La naturaleza físico-técnica de la línea blanca permite fragmentar el armado en diferentes establecimientos especializados."
+        },
+        {
+            numb: 6,
+            question: "¿Por qué el 'Factor 3: Costo de transporte de los factores' no impidió el traslado de líneas a Catamarca?",
+            options: [
+                "Porque Catamarca está al lado de los centros siderúrgicos.",
+                "Porque la empresa compensa el mayor costo de flete de insumos con los beneficios provinciales y las ganancias de escala.",
+                "Porque el transporte en el NOA es gratuito por ley nacional.",
+                "Porque ya no se usan insumos siderúrgicos."
+            ],
+            answer: 1,
+            explanation: "La distancia a las fuentes de insumos genera un mayor flete de llegada, pero es compensado con creces por otras ventajas de localización."
+        },
+        {
+            numb: 7,
+            question: "¿Cómo operó el 'Factor 4: Trabajo (Mano de obra)' en la relocalización de Longvie?",
+            options: [
+                "Con despidos masivos y contratación de personal sin experiencia previa.",
+                "Buscando salarios de subsistencia precarizados en el norte.",
+                "Mediante una reestructuración gradual y planificada que reconvirtió y mantuvo al personal técnico existente para asegurar continuidad.",
+                "Cerrando todas las fábricas y automatizando sin operarios."
+            ],
+            answer: 2,
+            explanation: "La empresa aclaró que el proceso fue gradual para no generar despidos masivos, aprovechando la dotación de saberes industriales preexistentes."
+        },
+        {
+            numb: 8,
+            question: "¿Qué rol cumple el 'Factor 5: Desigual red de comunicaciones y transportes'?",
+            options: [
+                "Funciona como el sistema circulatorio que cohesiona las plantas distantes y garantiza el abastecimiento constante de los clientes.",
+                "Es un obstáculo irrelevante ya que las plantas operan totalmente aisladas.",
+                "Sirve únicamente para el transporte de personal gerencial.",
+                "Impide la conexión entre el AMBA y el Litoral."
+            ],
+            answer: 0,
+            explanation: "Las rutas nacionales actúan como el vínculo circulatorio necesario para articular una red multilocalizada."
+        },
+        {
+            numb: 9,
+            question: "A qué se refiere el concepto de 'traslados paulatinos y constantes' en la logística de la firma:",
+            options: [
+                "A suspender la producción durante meses y luego reabrir de golpe.",
+                "A un proceso gradual (sin parálisis bruscas) y regular en el tiempo para asegurar el abastecimiento continuo sin desabastecer al mercado.",
+                "A cambiar de proveedor todos los días.",
+                "A trasladar las plantas mudándolas físicamente cada año."
+            ],
+            answer: 1,
+            explanation: "Significa hacerlo por etapas (paulatino) y de forma permanente y regular (constante) para no cortar la cadena comercial."
+        },
+        {
+            numb: 10,
+            question: "¿Qué implican las 'Economías de aglomeración' dentro del 'Factor 6: Infraestructura preexistente'?",
+            options: [
+                "La congestión extrema del tránsito urbano.",
+                "Aprovechar parques industriales equipados (como El Pantanillo) con caminos, energía y servicios ya instalados para reducir costos.",
+                "Construir fábricas desde cero en zonas desérticas sin caminos.",
+                "Pagar mayores impuestos municipales."
+            ],
+            answer: 1,
+            explanation: "Las aglomeraciones proveen infraestructura ya lista (gas, luz, rutas) que evita inversiones iniciales gigantescas."
+        },
+        {
+            numb: 11,
+            question: "Cuando la concentración urbana genera congestión, carestía de suelo y problemas logísticos, surgen...",
+            options: [
+                "Mayores subsidios estatales.",
+                "Deseconomías de aglomeración, impulsando la descentralización hacia áreas periféricas.",
+                "Nuevas fuentes de materias primas naturales.",
+                "Salarios más bajos en el centro de las ciudades."
+            ],
+            answer: 1,
+            explanation: "Las deseconomías ocurren cuando los costos de la concentración superan sus beneficios, motivando la salida hacia periferias."
+        },
+        {
+            numb: 12,
+            question: "¿Qué papel jugaron los 'Factores políticos (Rol del Estado)' en la decisión de Longvie de ir a Catamarca?",
+            options: [
+                "Ninguno, el Estado no interviene en la localización.",
+                "Fueron el motor principal al ofrecer incentivos fiscales, promoción industrial y exenciones (ej. Ingresos Brutos).",
+                "Establecieron multas punitivas para prohibir la fabricación de electrodomésticos.",
+                "Obligaron a la empresa a cerrar todas sus plantas."
+            ],
+            answer: 1,
+            explanation: "Los regímenes de promoción industrial y beneficios impositivos provinciales alteran favorablemente la rentabilidad corporativa."
+        },
+        {
+            numb: 13,
+            question: "¿A qué se refiere la dimensión de 'adaptación de la oferta a la demanda' dentro del Factor 8?",
+            options: [
+                "A que la empresa obliga a los clientes a comprar lo que ella quiere.",
+                "A que la firma ajusta los tipos de artefactos que fabrica y su distribución logística a las necesidades reales de un mercado geográficamente fragmentado.",
+                "A regalar electrodomésticos en las plazas públicas.",
+                "A modificar los gustos de los consumidores mediante publicidad masiva."
+            ],
+            answer: 1,
+            explanation: "La empresa sintoniza su producción y distribución para dar respuesta eficiente a un mercado de consumo disperso y segmentado."
+        },
+        {
+            numb: 14,
+            question: "¿Existen empresas proveedoras instaladas alrededor de las plantas de Longvie que se abastezcan de ella?",
+            options: [
+                "Sí, forman un clúster local masivo de autopartistas de línea blanca alrededor de cada fábrica.",
+                "No necesariamente; Longvie es una planta finalizadora de ensamblaje que se abastece de proveedores externos (siderúrgicos) y no funciona como nodo proveedor local.",
+                "Sí, Longvie vende exclusivamente piezas sueltas a sus vecinos.",
+                "No existen proveedores en Argentina."
+            ],
+            answer: 1,
+            explanation: "Longvie ensambla y finaliza productos; su red de proveedores de insumos siderúrgicos está en la región pampeana, no localmente alrededor de sus plantas."
+        },
+        {
+            numb: 15,
+            question: "¿Qué significa que las plantas de Longvie operen mediante 'localizaciones concatenadas'?",
+            options: [
+                "Que compiten entre sí para ver cuál quiebra primero.",
+                "Que funcionan como una red coordinada corporativamente donde la especialización de cada sede complementa y sostiene a las demás.",
+                "Que están unidas por vías ferroviarias privadas.",
+                "Que producen exactamente lo mismo en las tres provincias."
+            ],
+            answer: 1,
+            explanation: "Es la articulación en red de establecimientos donde cada uno cumple una función específica dentro de una misma estrategia empresaria."
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionContainer = document.getElementById('quiz-container');
+    const progressBar = document.getElementById('progress');
+    const resultsContainer = document.getElementById('results-container');
+    const scoreDisplay = document.getElementById('score-display');
+    const feedbackMessage = document.getElementById('feedback-message');
+
+    function loadQuiz() {
+        questionContainer.innerHTML = '';
+        questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.classList.add('question-card');
+            if (index === 0) card.classList.add('active');
+            card.id = `question-${index}`;
+
+            let optionsHtml = '';
+            q.options.forEach((opt, optIndex) => {
+                optionsHtml += `<button class="option-btn" onclick="selectOption(${index}, ${optIndex})">${opt}</button>`;
+            });
+
+            card.innerHTML = `
+                <div class="question-number">Pregunta ${index + 1} de ${questions.length}</div>
+                <div class="question-title">${q.question}</div>
+                <div class="options-list" id="options-${index}">
+                    ${optionsHtml}
+                </div>
+                <div class="feedback" id="feedback-${index}"></div>
+                <button class="next-btn" id="next-btn-${index}" onclick="nextQuestion(${index})">Siguiente ➔</button>
+            `;
+            questionContainer.appendChild(card);
+        });
+        updateProgress();
+    }
+
+    function selectOption(qIndex, selectedOpt) {
+        if (answered) return;
+        answered = true;
+
+        const q = questions[qIndex];
+        const optionsButtons = document.querySelectorAll(`#options-${qIndex} .option-btn`);
+        const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+        const nextBtn = document.getElementById(`next-btn-${qIndex}`);
+
+        optionsButtons.forEach((btn, idx) => {
+            btn.disabled = true;
+            if (idx === q.answer) {
+                btn.classList.add('correct');
+            } else if (idx === selectedOpt) {
+                btn.classList.add('incorrect');
+            }
+        });
+
+        if (selectedOpt === q.answer) {
+            score++;
+            feedbackDiv.classList.add('correct');
+            feedbackDiv.innerHTML = `<strong>¡Correcto!</strong> ${q.explanation}`;
+        } else {
+            feedbackDiv.classList.add('incorrect');
+            feedbackDiv.innerHTML = `<strong>Incorrecto.</strong> ${q.explanation}`;
+        }
+
+        nextBtn.style.display = 'block';
+    }
+
+    function nextQuestion(currentIndex) {
+        answered = false;
+        const currentCard = document.getElementById(`question-${currentIndex}`);
+        currentCard.classList.remove('active');
+
+        if (currentIndex + 1 < questions.length) {
+            currentQuestion++;
+            const nextCard = document.getElementById(`question-${currentQuestion}`);
+            nextCard.classList.add('active');
+            updateProgress();
+        } else {
+            showResults();
+        }
+    }
+
+    function updateProgress() {
+        const progressPercentage = ((currentQuestion) / questions.length) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+    }
+
+    function showResults() {
+        document.querySelector('.progress-bar').style.display = 'none';
+        questionContainer.style.display = 'none';
+        resultsContainer.style.display = 'block';
+        scoreDisplay.textContent = `${score} / ${questions.length}`;
+
+        let message = "";
+        const percentage = (score / questions.length) * 100;
+        if (percentage === 100) {
+            message = "¡Impecable! Tienes nivel de diez para el parcial de geografía económica.";
+        } else if (percentage >= 70) {
+            message = "¡Muy bien! Tienes los conceptos súper claros, ¡a repasar lo que falló y listo!";
+        } else {
+            message = "Buen intento, te sugerimos repasar los apartados teóricos de Borello y los factores.";
+        }
+        feedbackMessage.textContent = message;
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        answered = false;
+        resultsContainer.style.display = 'none';
+        questionContainer.style.display = 'block';
+        document.querySelector('.progress-bar').style.display = 'block';
+        loadQuiz();
+    }
+
+    // Inicializar el cuestionario al cargar la página
+    loadQuiz();
+</script>
+
+</body>
+</html>
